@@ -1,0 +1,114 @@
+USE master 
+GO 
+
+CREATE DATABASE PRM392_Project 
+GO 
+
+USE PRM392_Project 
+GO 
+
+CREATE TABLE SystemUser
+(
+UserID UNIQUEIDENTIFIER PRIMARY KEY NOT NULL, 
+Username NVARCHAR(50) NOT NULL, 
+Email NVARCHAR(50) NOT NULL,
+Phone NVARCHAR(10) NOT NULL, 
+Address NVARCHAR(250) NOT NULL,
+Password NVARCHAR(50) NOT NULL, 
+CreatedAt DATE NOT NULL, 
+CreatedBy UNIQUEIDENTIFIER NOT NULL, 
+UpdatedAt DATE NOT NULL, 
+UpdatedBy UNIQUEIDENTIFIER NOT NULL, 
+)
+
+CREATE TABLE SystemRole
+(
+RoleID UNIQUEIDENTIFIER PRIMARY KEY NOT NULL, 
+RoleName NVARCHAR(50) NOT NULL, 
+CreatedAt DATE NOT NULL, 
+CreatedBy UNIQUEIDENTIFIER FOREIGN KEY REFERENCES SystemUser(UserID) NOT NULL, 
+UpdatedAt DATE NOT NULL, 
+UpdatedBy UNIQUEIDENTIFIER FOREIGN KEY REFERENCES SystemUser(UserID) NOT NULL, 
+)
+
+CREATE TABLE SystemUserRole
+(
+UserRoleID UNIQUEIDENTIFIER PRIMARY KEY NOT NULL,
+UserID UNIQUEIDENTIFIER FOREIGN KEY REFERENCES SystemUser(UserID),
+RoleID UNIQUEIDENTIFIER FOREIGN KEY REFERENCES SystemRole(RoleID), 
+CreatedAt DATE NOT NULL, 
+CreatedBy UNIQUEIDENTIFIER FOREIGN KEY REFERENCES SystemUser(UserID) NOT NULL, 
+UpdatedAt DATE NOT NULL, 
+UpdatedBy UNIQUEIDENTIFIER FOREIGN KEY REFERENCES SystemUser(UserID) NOT NULL, 
+)
+
+
+CREATE TABLE FoodCategory
+(
+CategoryID INT PRIMARY KEY NOT NULL,
+CategoryName NVARCHAR(150) NOT NULL,
+CreatedAt DATE NOT NULL, 
+CreatedBy UNIQUEIDENTIFIER FOREIGN KEY REFERENCES SystemUser(UserID) NOT NULL, 
+UpdatedAt DATE NOT NULL, 
+UpdatedBy UNIQUEIDENTIFIER FOREIGN KEY REFERENCES SystemUser(UserID) NOT NULL,
+)
+
+CREATE TABLE FoodProduct
+(
+FoodID INT PRIMARY KEY NOT NULL,
+FoodName NVARCHAR(250) NOT NULL,
+FoodCategory INT FOREIGN KEY,
+FoodDescription TEXT NOT NULL, 
+FoodImage TEXT NOT NULL,
+Price REAL NOT NULL,
+CreatedAt DATE NOT NULL, 
+CreatedBy UNIQUEIDENTIFIER FOREIGN KEY REFERENCES SystemUser(UserID) NOT NULL, 
+UpdatedAt DATE NOT NULL, 
+UpdatedBy UNIQUEIDENTIFIER FOREIGN KEY REFERENCES SystemUser(UserID) NOT NUL, 
+)
+
+CREATE TABLE StoreOrder 
+(
+OrderID INT PRIMARY KEY NOT NULL, 
+TotalPrice REAL NOT NULL, 
+OrderStatus NVARCHAR(250) NOT NULL,
+UserID UNIQUEIDENTIFIER FOREIGN KEY REFERENCES SystemUser(UserID) NOT NULL,
+CreatedAt DATE NOT NULL, 
+CreatedBy UNIQUEIDENTIFIER FOREIGN KEY REFERENCES SystemUser(UserID) NOT NULL, 
+UpdatedAt DATE NOT NULL, 
+UpdatedBy UNIQUEIDENTIFIER FOREIGN KEY REFERENCES SystemUser(UserID) NOT NULL, 
+)
+
+CREATE TABLE StoreOrderDetail
+(
+OrderID INT FOREIGN KEY REFERENCES StoreOrder(OrderID) NOT NULL,
+ProductID INT FOREIGN KEY REFERENCES FoodProduct(FoodID) NOT NULL, 
+Quantity INT NOT NULL
+)
+
+DECLARE @AdminUserID UNIQUEIDENTIFIER;
+SET @AdminUserID = NEWID();
+
+INSERT INTO SystemUser (UserID, Username, Email, Phone, Address, Password, CreatedAt, CreatedBy, UpdatedAt, UpdatedBy)
+VALUES 
+(@AdminUserID, 'AdminUser', 'admin@example.com', '1234567890', '123 Admin Street', 'adminpassword', GETDATE(), @AdminUserID, GETDATE(), @AdminUserID);
+
+INSERT INTO SystemRole (RoleID, RoleName, CreatedAt, CreatedBy, UpdatedAt, UpdatedBy)
+VALUES 
+(NEWID(), 'Admin', GETDATE(), @AdminUserID, GETDATE(), @AdminUserID);
+
+INSERT INTO SystemUserRole (UserRoleID, UserID, RoleID, CreatedAt, CreatedBy, UpdatedAt, UpdatedBy)
+VALUES 
+(NEWID(), @AdminUserID, 
+ (SELECT RoleID FROM SystemRole WHERE RoleName = 'Admin'), 
+ GETDATE(), @AdminUserID, GETDATE(), @AdminUserID);
+
+
+ INSERT INTO FoodCategory (CategoryID, CategoryName, CreatedAt, CreatedBy, UpdatedAt, UpdatedBy)
+VALUES 
+(1, 'Beverages', GETDATE(), @AdminUserID, GETDATE(), @AdminUserID),
+(2, 'Condiments', GETDATE(), @AdminUserID, GETDATE(), @AdminUserID),
+(3, 'Confections', GETDATE(), @AdminUserID, GETDATE(), @AdminUserID),
+(4, 'Dairy Products', GETDATE(), @AdminUserID, GETDATE(), @AdminUserID);
+
+
